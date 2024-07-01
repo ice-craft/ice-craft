@@ -30,7 +30,7 @@ const JoinMafiaRoom = () => {
   }, [isBack]);
 
   const joinError = (error: Error | string) => {
-    // setIsJoinError(false);
+    setIsJoinError(false);
     console.log("joinError", error);
   };
 

@@ -16,44 +16,64 @@ const useJoinRoom = () => {
 
   useJoinRoomSocket();
 
-  // //NOTE - 유효성 검사
+  //NOTE - 사용자 로그인 여부
   useEffect(() => {
     const checkUserInfo = async () => {
       try {
-        setLoading(true);
         const userInfo = await checkUserLogIn();
         if (userInfo) {
           setUserId(userInfo.id);
           setUserNickname(userInfo.user_metadata.nickname);
-        } else {
-          toast.info("로그인 후 입장 가능합니다.");
-        }
-        if (!isGoInClick.current) {
-          isGoInClick.current = true;
         }
       } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
+        console.error("error:", error);
       }
     };
     checkUserInfo();
   }, []);
 
+  //NOTE - 클릭시 로그인 안한 유저 처리
+  const loginErrorHandler = async (emitCallback: () => void) => {
+    try {
+      setLoading(true);
+      const isLogin = await checkUserLogIn();
+
+      if (!isLogin) {
+        toast.info("로그인 후 입장가능합니다.");
+        return;
+      }
+      if (!isGoInClick.current) {
+        isGoInClick.current = true;
+        emitCallback();
+      }
+    } catch (error) {
+      console.log("error", error);
+    } finally {
+      setLoading(false);
+      isGoInClick.current = false;
+    }
+  };
+
   //NOTE - 방 리스트 입장하기
-  const joinRoomHandler = (item: Tables<"room_table">) => {
-    setRoomId(item.room_id);
-    socket.emit("joinRoom", userId, item.room_id, nickname);
+  const joinRoomHandler = async (item: Tables<"room_table">) => {
+    await loginErrorHandler(() => {
+      setRoomId(item.room_id);
+      socket.emit("joinRoom", userId, item.room_id, nickname);
+    });
   };
 
   //NOTE - 메인페이지 visual에서 게임시작 버튼 클릭시(추후 마피아 & 노래맞추기 조건 추가)
   const gameStartHandler = () => {
-    socket.emit("fastJoinRoom", userId, nickname);
+    loginErrorHandler(() => {
+      socket.emit("fastJoinRoom", userId, nickname);
+    });
   };
 
   //NOTE - 빠른 입장 (랜덤 방 입장)
   const fastJoinRoomHandler = () => {
-    socket.emit("fastJoinRoom", userId, nickname);
+    loginErrorHandler(() => {
+      socket.emit("fastJoinRoom", userId, nickname);
+    });
   };
 
   return { joinRoomHandler, fastJoinRoomHandler, gameStartHandler, loading };
