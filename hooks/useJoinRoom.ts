@@ -43,7 +43,7 @@ const useJoinRoom = () => {
   //NOTE - 방 리스트 입장하기
   const joinRoomHandler = (item: Tables<"room_table">) => {
     setRoomId(item.room_id);
-    socket.emit("joinRoom", userId, roomId, nickname);
+    socket.emit("joinRoom", userId, item.room_id, nickname);
   };
 
   //NOTE - 메인페이지 visual에서 게임시작 버튼 클릭시(추후 마피아 & 노래맞추기 조건 추가)
